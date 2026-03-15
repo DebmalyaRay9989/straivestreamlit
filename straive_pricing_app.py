@@ -1664,6 +1664,7 @@ def main():
     elif active_tab == "🗓️ Seasonality & Trends":
         st.markdown('<div class="section-header">Revenue Seasonality & Pricing Trends</div>', unsafe_allow_html=True)
 
+        df["month"]     = df["date"].dt.to_period("M").dt.to_timestamp()
         df["month_num"] = df["date"].dt.month
         df["quarter"]   = df["date"].dt.quarter
         df["year"]      = df["date"].dt.year
