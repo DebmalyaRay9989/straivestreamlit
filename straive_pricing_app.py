@@ -144,35 +144,47 @@ SEGMENT_COLORS = {"Editorial": "#4f9eff", "Data Services": "#36d97b", "AI/ML": "
 # ─────────────────────────────────────────────────────────────────────────────
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
-DARK_BG  = "#05080f"
-CARD_BG  = "#0e1320"
-BORDER   = "#1e2740"
-ACCENT   = "#4f9eff"
-ACCENT2  = "#ff6b6b"
-ACCENT3  = "#ffd700"
-TEXT     = "#e8edf5"
-MUTED    = "#7a869a"
-GREEN    = "#36d97b"
-YELLOW   = "#f5a623"
-RED      = "#ff4d6d"
-PURPLE   = "#b48eff"
+DARK_BG  = "#030712"
+CARD_BG  = "#0d1117"
+CARD_BG2 = "#111827"
+BORDER   = "#1f2d45"
+BORDER2  = "#243448"
+ACCENT   = "#3b82f6"
+ACCENT2  = "#f43f5e"
+ACCENT3  = "#eab308"
+TEXT     = "#f1f5f9"
+TEXT2    = "#cbd5e1"
+MUTED    = "#64748b"
+GREEN    = "#22c55e"
+YELLOW   = "#f59e0b"
+RED      = "#ef4444"
+PURPLE   = "#a78bfa"
+TEAL     = "#14b8a6"
 
 PLOTLY_DARK = dict(
     paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG,
-    font=dict(color=TEXT, family="'Inter','Segoe UI',sans-serif", size=12),
-    title_font=dict(color=TEXT, size=15, family="'Oswald',sans-serif"),
-    legend=dict(bgcolor="rgba(14,19,32,0.85)", bordercolor=BORDER, borderwidth=1,
-                font=dict(color=TEXT, size=11)),
-    margin=dict(l=14, r=14, t=48, b=14),
-    hoverlabel=dict(bgcolor=CARD_BG, bordercolor=BORDER, font=dict(color=TEXT, size=12)),
+    font=dict(color=TEXT2, family="'Plus Jakarta Sans','Segoe UI',sans-serif", size=12),
+    title_font=dict(color=TEXT, size=14, family="'Space Grotesk',sans-serif", weight=700),
+    legend=dict(bgcolor="rgba(13,17,23,0.9)", bordercolor=BORDER2, borderwidth=1,
+                font=dict(color=TEXT2, size=11)),
+    margin=dict(l=16, r=16, t=52, b=16),
+    hoverlabel=dict(bgcolor=CARD_BG2, bordercolor=BORDER2, font=dict(color=TEXT, size=12)),
 )
 
 def style_fig(fig: go.Figure, height: Optional[int] = None) -> go.Figure:
     upd = dict(**PLOTLY_DARK)
     if height: upd["height"] = height
     fig.update_layout(**upd)
-    fig.update_xaxes(gridcolor=BORDER, zerolinecolor=BORDER, linecolor=BORDER, tickfont=dict(color=MUTED, size=11))
-    fig.update_yaxes(gridcolor=BORDER, zerolinecolor=BORDER, linecolor=BORDER, tickfont=dict(color=MUTED, size=11))
+    fig.update_xaxes(
+        gridcolor="rgba(31,45,69,.6)", zerolinecolor=BORDER2,
+        linecolor=BORDER2, tickfont=dict(color=MUTED, size=11),
+        showgrid=True, gridwidth=1,
+    )
+    fig.update_yaxes(
+        gridcolor="rgba(31,45,69,.6)", zerolinecolor=BORDER2,
+        linecolor=BORDER2, tickfont=dict(color=MUTED, size=11),
+        showgrid=True, gridwidth=1,
+    )
     return fig
 
 def to_csv_bytes(df: pd.DataFrame) -> bytes:
@@ -407,167 +419,443 @@ def apply_pricing_scenario(
 # ─────────────────────────────────────────────────────────────────────────────
 def main():
     st.set_page_config(
-        page_title="STRAIVE · Dynamic Pricing Optimization",
+        page_title="STRAIVE · Dynamic Pricing Platform",
         page_icon="💹",
         layout="wide",
         initial_sidebar_state="expanded",
+        menu_items={
+            "Get Help": None,
+            "Report a bug": None,
+            "About": "STRAIVE Dynamic Pricing Optimization Platform v2.0",
+        },
     )
 
     # ── CSS ──────────────────────────────────────────────────────────────────
     st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+    /* ── Reset & Base ─────────────────────────────────── */
     html, body, [class*="css"] {{
         background-color: {DARK_BG} !important;
         color: {TEXT};
-        font-family: 'Inter','Segoe UI',sans-serif;
+        font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+        font-size: 14px;
     }}
     .stApp {{ background: {DARK_BG}; }}
-    .block-container {{ padding-top:1.6rem; padding-bottom:2rem; max-width:1440px; }}
+    .block-container {{
+        padding: 1.5rem 2.5rem 3rem 2.5rem !important;
+        max-width: 1600px !important;
+    }}
 
+    /* ── Hero Banner ───────────────────────────────────── */
+    .hero-wrapper {{
+        background: linear-gradient(135deg, #0d1117 0%, #0f172a 40%, #111827 100%);
+        border: 1px solid {BORDER2};
+        border-radius: 20px;
+        padding: 2.4rem 2.8rem 2rem 2.8rem;
+        margin-bottom: 1.8rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 40px rgba(59,130,246,.08), inset 0 1px 0 rgba(255,255,255,.04);
+    }}
+    .hero-wrapper::before {{
+        content:'';
+        position:absolute; top:-80px; right:-80px;
+        width:320px; height:320px; border-radius:50%;
+        background: radial-gradient(circle, rgba(59,130,246,.12) 0%, transparent 70%);
+        pointer-events:none;
+    }}
+    .hero-wrapper::after {{
+        content:'';
+        position:absolute; bottom:-60px; left:20%;
+        width:220px; height:220px; border-radius:50%;
+        background: radial-gradient(circle, rgba(34,197,94,.07) 0%, transparent 70%);
+        pointer-events:none;
+    }}
+    .hero-badge {{
+        display:inline-flex; align-items:center; gap:.45rem;
+        background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.28);
+        border-radius:100px; padding:.28rem .85rem;
+        font-size:.65rem; font-weight:600; letter-spacing:2.5px;
+        text-transform:uppercase; color:{ACCENT}; margin-bottom:1rem;
+    }}
+    .hero-badge-dot {{
+        width:6px; height:6px; border-radius:50%;
+        background:{GREEN}; box-shadow:0 0 8px {GREEN};
+        animation: pulse-dot 2s ease-in-out infinite;
+    }}
+    @keyframes pulse-dot {{
+        0%,100% {{ opacity:1; transform:scale(1); }}
+        50% {{ opacity:.6; transform:scale(.8); }}
+    }}
     .main-title {{
-        font-family:'Oswald',sans-serif;
-        font-size: clamp(1.9rem,4.5vw,3rem);
-        font-weight:700;
-        background: linear-gradient(120deg,{ACCENT} 0%,{GREEN} 45%,{ACCENT3} 80%,{ACCENT} 100%);
-        background-size:200% auto;
-        -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-        animation: shimmer 5s linear infinite;
-        text-align:center; letter-spacing:4px; padding:.6rem 0 .2rem 0; text-transform:uppercase;
+        font-family:'Space Grotesk', sans-serif;
+        font-size: clamp(2rem, 3.5vw, 3.2rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #ffffff 0%, {ACCENT} 40%, {GREEN} 70%, {ACCENT3} 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        letter-spacing: -1px;
+        line-height: 1.1;
+        margin-bottom: .5rem;
     }}
-    @keyframes shimmer {{ 0%{{background-position:0% center}} 100%{{background-position:200% center}} }}
+    .hero-subtitle {{
+        color: {MUTED};
+        font-size: .82rem;
+        font-weight: 400;
+        letter-spacing: .5px;
+        line-height: 1.6;
+        max-width: 580px;
+        margin-top: .4rem;
+    }}
+    .hero-pills {{
+        display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem;
+    }}
+    .hero-pill {{
+        background: rgba(255,255,255,.04); border: 1px solid {BORDER2};
+        border-radius: 100px; padding: .25rem .75rem;
+        font-size: .65rem; font-weight: 500; color: {TEXT2};
+        letter-spacing: 1px; text-transform: uppercase;
+    }}
 
-    .hero-underline {{
-        height:2px; width:60%; margin:.35rem auto .6rem auto;
-        background:linear-gradient(90deg,transparent,{ACCENT},{ACCENT3},{GREEN},transparent);
-        border-radius:2px; opacity:.75;
-    }}
-    .sub-title {{
-        text-align:center; color:{MUTED}; font-size:.78rem; letter-spacing:2.5px;
-        margin-bottom:2rem; text-transform:uppercase; font-family:'Inter',sans-serif;
-    }}
-
+    /* ── Section Headers ───────────────────────────────── */
     .section-header {{
-        font-family:'Oswald',sans-serif; font-size:1.05rem; font-weight:600;
-        letter-spacing:2.5px; color:{ACCENT}; text-transform:uppercase;
-        display:flex; align-items:center; gap:.7rem;
-        margin:1.6rem 0 .9rem 0; padding-bottom:.45rem; border-bottom:1px solid {BORDER};
+        font-family:'Space Grotesk', sans-serif;
+        font-size: .85rem; font-weight: 700;
+        letter-spacing: 2px; color: {TEXT2};
+        text-transform: uppercase;
+        display: flex; align-items: center; gap: .6rem;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: .6rem;
+        border-bottom: 1px solid {BORDER};
     }}
     .section-header::before {{
-        content:''; display:block; width:4px; height:1.1em; border-radius:2px;
-        background:linear-gradient(180deg,{ACCENT},{GREEN}); flex-shrink:0;
+        content:''; display:block; width:3px; height:1rem; border-radius:3px;
+        background: linear-gradient(180deg, {ACCENT}, {GREEN}); flex-shrink:0;
     }}
 
+    /* ── KPI Strip ─────────────────────────────────────── */
+    .kpi-strip {{
+        display: grid; grid-template-columns: repeat(8, 1fr); gap: .75rem;
+        margin: .5rem 0 1.5rem 0;
+    }}
+    .kpi-card {{
+        background: {CARD_BG};
+        border: 1px solid {BORDER};
+        border-radius: 14px;
+        padding: 1rem .9rem .85rem .9rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: border-color .2s, box-shadow .2s, transform .15s;
+    }}
+    .kpi-card:hover {{
+        border-color: {BORDER2};
+        box-shadow: 0 4px 24px rgba(0,0,0,.4);
+        transform: translateY(-1px);
+    }}
+    .kpi-card::after {{
+        content:''; position:absolute; top:0; left:0; right:0; height:2px;
+        border-radius:14px 14px 0 0;
+        background: var(--kpi-accent);
+    }}
+    .kpi-val {{
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.5rem; font-weight: 700;
+        line-height: 1.15; color: var(--kpi-accent);
+        letter-spacing: -0.5px;
+    }}
+    .kpi-lbl {{
+        color: {MUTED}; font-size: .6rem;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        margin-top: .35rem; font-weight: 500;
+    }}
+
+    /* ── Insight Cards ─────────────────────────────────── */
     .insight-card {{
-        background:{CARD_BG}; border:1px solid {BORDER}; border-radius:14px;
-        padding:1.3rem 1.2rem; margin:.5rem 0;
-        box-shadow:0 2px 16px rgba(0,0,0,.35);
-        transition:box-shadow .2s,border-color .2s,transform .15s;
+        background: {CARD_BG};
+        border: 1px solid {BORDER};
+        border-radius: 16px;
+        padding: 1.5rem 1.4rem;
+        margin: .5rem 0;
+        transition: box-shadow .2s, border-color .2s, transform .15s;
     }}
     .insight-card:hover {{
-        box-shadow:0 6px 28px rgba(79,158,255,.18); border-color:{ACCENT}; transform:translateY(-2px);
+        box-shadow: 0 8px 32px rgba(59,130,246,.12);
+        border-color: rgba(59,130,246,.35);
+        transform: translateY(-2px);
     }}
-    .insight-title  {{ font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:600;
-                       color:{ACCENT};text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem; }}
-    .insight-value  {{ font-size:1.5rem;font-weight:700;color:{TEXT};font-family:'Oswald',sans-serif; }}
-    .insight-sub    {{ font-size:.75rem;color:{MUTED};margin-top:.3rem; }}
+    .insight-title {{
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: .7rem; font-weight: 600;
+        color: {ACCENT}; text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: .6rem;
+    }}
+    .insight-value {{
+        font-size: 2rem; font-weight: 700;
+        color: {TEXT}; font-family: 'Space Grotesk', sans-serif;
+        letter-spacing: -1px; line-height: 1;
+    }}
+    .insight-sub {{ font-size: .72rem; color: {MUTED}; margin-top: .5rem; line-height: 1.5; }}
 
-    .kpi-card {{
-        background:{CARD_BG}; border:1px solid {BORDER}; border-radius:10px;
-        padding:.55rem .5rem; text-align:center; border-top:2px solid {ACCENT};
-        margin-bottom:.8rem;
+    /* ── Buttons ───────────────────────────────────────── */
+    .stButton > button {{
+        background: linear-gradient(135deg, {ACCENT} 0%, #1d4ed8 100%) !important;
+        color: #fff !important; border: none !important; border-radius: 10px !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: .8rem !important; font-weight: 700 !important;
+        letter-spacing: 2px !important; text-transform: uppercase !important;
+        padding: .75rem 1.8rem !important; width: 100% !important;
+        cursor: pointer !important; transition: all .2s ease !important;
+        box-shadow: 0 2px 20px rgba(59,130,246,.3) !important;
     }}
-    .kpi-val  {{ font-family:'Oswald',sans-serif;font-size:1.45rem;font-weight:700;line-height:1.2; }}
-    .kpi-lbl  {{ color:{MUTED};font-size:.58rem;letter-spacing:1px;text-transform:uppercase;margin-top:.2rem; }}
-
-    .stButton>button {{
-        background:linear-gradient(135deg,{ACCENT} 0%,#1a5fd1 100%);
-        color:#fff; border:none; border-radius:8px;
-        font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:600;
-        letter-spacing:2px; text-transform:uppercase;
-        padding:.7rem 2rem; width:100%; cursor:pointer;
-        transition:all .2s ease; box-shadow:0 2px 16px rgba(79,158,255,.25);
-    }}
-    .stButton>button:hover {{
-        transform:translateY(-2px); box-shadow:0 8px 28px rgba(79,158,255,.45);
-        background:linear-gradient(135deg,#6bb3ff 0%,#2268e0 100%);
+    .stButton > button:hover {{
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 32px rgba(59,130,246,.5) !important;
+        background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
     }}
 
+    /* ── Metric Components ─────────────────────────────── */
     div[data-testid="metric-container"] {{
-        background:{CARD_BG}; border:1px solid {BORDER}; border-radius:10px;
-        padding:1rem 1.1rem; border-top:2px solid {ACCENT};
-        box-shadow:0 2px 12px rgba(0,0,0,.3);
+        background: {CARD_BG} !important;
+        border: 1px solid {BORDER} !important;
+        border-radius: 14px !important;
+        padding: 1.2rem 1.3rem !important;
+        border-left: 3px solid {ACCENT} !important;
+        box-shadow: 0 2px 16px rgba(0,0,0,.25) !important;
+        transition: box-shadow .2s !important;
+    }}
+    div[data-testid="metric-container"]:hover {{
+        box-shadow: 0 6px 28px rgba(59,130,246,.15) !important;
     }}
     div[data-testid="metric-container"] label {{
-        font-size:.7rem !important;letter-spacing:1.5px !important;
-        text-transform:uppercase !important;color:{MUTED} !important;
+        font-size: .65rem !important; letter-spacing: 2px !important;
+        text-transform: uppercase !important; color: {MUTED} !important;
+        font-weight: 600 !important;
     }}
     div[data-testid="metric-container"] div[data-testid="stMetricValue"] {{
-        font-family:'Oswald',sans-serif !important;font-size:1.7rem !important;
-        color:{TEXT} !important;font-weight:600 !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 1.8rem !important; color: {TEXT} !important;
+        font-weight: 700 !important; letter-spacing: -1px !important;
+    }}
+    div[data-testid="metric-container"] div[data-testid="stMetricDelta"] {{
+        font-size: .72rem !important; font-weight: 600 !important;
     }}
 
+    /* ── Sidebar ───────────────────────────────────────── */
     [data-testid="stSidebar"] {{
-        background:{CARD_BG} !important; border-right:1px solid {BORDER} !important;
+        background: {CARD_BG} !important;
+        border-right: 1px solid {BORDER} !important;
+        padding-top: 0 !important;
     }}
-    ::-webkit-scrollbar {{ width:6px; height:6px; }}
-    ::-webkit-scrollbar-track {{ background:{DARK_BG}; }}
-    ::-webkit-scrollbar-thumb {{ background:{BORDER}; border-radius:3px; }}
+    [data-testid="stSidebar"] > div:first-child {{
+        padding-top: 0 !important;
+    }}
+    .sidebar-logo-area {{
+        background: linear-gradient(135deg, #0f172a, #111827);
+        border-bottom: 1px solid {BORDER};
+        padding: 1.6rem 1.2rem 1.2rem 1.2rem;
+        margin: -1px -1px 0 -1px;
+    }}
+    .sidebar-logo-name {{
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.25rem; font-weight: 800;
+        color: {TEXT}; letter-spacing: -0.5px;
+    }}
+    .sidebar-logo-name span {{ color: {ACCENT}; }}
+    .sidebar-logo-sub {{
+        font-size: .62rem; color: {MUTED};
+        letter-spacing: 2px; text-transform: uppercase;
+        margin-top: .2rem; font-weight: 500;
+    }}
+    .sidebar-section-label {{
+        font-size: .6rem; color: {MUTED};
+        letter-spacing: 2.5px; text-transform: uppercase;
+        margin: 1.2rem 0 .5rem .2rem; font-weight: 600;
+        display: flex; align-items: center; gap: .4rem;
+    }}
+    .sidebar-section-label::before {{
+        content:''; display:inline-block; width:14px; height:1px;
+        background: {BORDER2}; flex-shrink:0;
+    }}
 
-    [data-testid="stDataFrame"] {{
-        border:1px solid {BORDER} !important; border-radius:10px !important; overflow:hidden;
+    /* ── Form Elements ─────────────────────────────────── */
+    .stSelectbox > div > div,
+    .stMultiSelect > div > div {{
+        background: {CARD_BG2} !important;
+        border: 1px solid {BORDER} !important;
+        border-radius: 10px !important;
+        color: {TEXT} !important;
     }}
-    .stSelectbox>div>div {{
-        background:{CARD_BG} !important; border-color:{BORDER} !important; border-radius:8px !important;
+    .stSelectbox > div > div:focus-within,
+    .stMultiSelect > div > div:focus-within {{
+        border-color: {ACCENT} !important;
+        box-shadow: 0 0 0 2px rgba(59,130,246,.15) !important;
+    }}
+    .stSlider > div {{ margin-top: .2rem; }}
+    div[data-baseweb="slider"] div[data-testid="stThumbValue"] {{
+        background: {ACCENT} !important; border-radius: 6px !important;
+    }}
+
+    /* ── DataFrames ────────────────────────────────────── */
+    [data-testid="stDataFrame"] {{
+        border: 1px solid {BORDER} !important;
+        border-radius: 12px !important; overflow: hidden !important;
+        box-shadow: 0 2px 16px rgba(0,0,0,.2) !important;
+    }}
+
+    /* ── Tabs (for any st.tabs) ────────────────────────── */
+    .stTabs [data-baseweb="tab-list"] {{
+        background: {CARD_BG} !important;
+        border-bottom: 1px solid {BORDER} !important;
+        border-radius: 12px 12px 0 0 !important;
+        gap: 0 !important;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        background: transparent !important;
+        border-radius: 0 !important;
+        color: {MUTED} !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-weight: 600 !important; font-size: .78rem !important;
+        padding: .75rem 1.2rem !important;
+        border-bottom: 2px solid transparent !important;
+    }}
+    .stTabs [aria-selected="true"] {{
+        color: {ACCENT} !important;
+        border-bottom-color: {ACCENT} !important;
+    }}
+
+    /* ── Alerts & Info ─────────────────────────────────── */
+    .stAlert {{
+        border-radius: 12px !important;
+        border-left: 3px solid {ACCENT} !important;
+        background: rgba(59,130,246,.06) !important;
+    }}
+
+    /* ── Divider ───────────────────────────────────────── */
+    .styled-divider {{
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, {BORDER2} 20%, {BORDER2} 80%, transparent 100%);
+        margin: 1.5rem 0;
+        border: none;
+    }}
+
+    /* ── Scrollbars ────────────────────────────────────── */
+    ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
+    ::-webkit-scrollbar-track {{ background: {DARK_BG}; }}
+    ::-webkit-scrollbar-thumb {{ background: {BORDER2}; border-radius: 4px; }}
+    ::-webkit-scrollbar-thumb:hover {{ background: {MUTED}; }}
+
+    /* ── Radio nav in sidebar ──────────────────────────── */
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {{
+        border-radius: 8px !important;
+        padding: .45rem .75rem !important;
+        font-size: .78rem !important;
+        font-weight: 500 !important;
+        color: {TEXT2} !important;
+        transition: background .15s, color .15s !important;
+        cursor: pointer !important;
+    }}
+    [data-testid="stSidebar"] [data-testid="stRadio"] label:hover {{
+        background: rgba(59,130,246,.08) !important;
+        color: {TEXT} !important;
+    }}
+    [data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"] + label,
+    [data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"] {{
+        background: rgba(59,130,246,.12) !important;
+        color: {ACCENT} !important;
+    }}
+
+    /* ── Download buttons ──────────────────────────────── */
+    .stDownloadButton > button {{
+        background: rgba(59,130,246,.1) !important;
+        color: {ACCENT} !important;
+        border: 1px solid rgba(59,130,246,.3) !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: .75rem !important;
+        letter-spacing: 1.5px !important;
+        text-transform: uppercase !important;
+        padding: .5rem 1.2rem !important;
+        width: auto !important;
+        box-shadow: none !important;
+    }}
+    .stDownloadButton > button:hover {{
+        background: rgba(59,130,246,.2) !important;
+        border-color: {ACCENT} !important;
+        transform: none !important;
+        box-shadow: 0 2px 12px rgba(59,130,246,.2) !important;
+    }}
+
+    /* ── Spinner ───────────────────────────────────────── */
+    .stSpinner > div {{
+        border-top-color: {ACCENT} !important;
+    }}
+
+    /* ── Success/warning messages ──────────────────────── */
+    .element-container .stAlert [data-testid="stMarkdownContainer"] p {{
+        font-size: .82rem !important; font-weight: 500 !important;
     }}
     </style>
     """, unsafe_allow_html=True)
 
     # ── Hero ─────────────────────────────────────────────────────────────────
     st.markdown(f"""
-    <div style="padding:1.2rem 0 0 0;">
-      <div class="main-title">💹 STRAIVE Dynamic Pricing</div>
-      <div class="hero-underline"></div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin:.3rem auto .1rem auto;">
-        <span style="width:6px;height:6px;border-radius:50%;background:{ACCENT3};display:inline-block;"></span>
-        <span style="font-family:'Inter';font-size:.78rem;font-weight:500;color:{ACCENT3};letter-spacing:2.5px;text-transform:uppercase;">
-          Optimization · Elasticity Modeling · Revenue Simulation
-        </span>
-        <span style="width:6px;height:6px;border-radius:50%;background:{ACCENT3};display:inline-block;"></span>
+    <div class="hero-wrapper">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Live Analytics Platform
       </div>
-      <div class="sub-title">Price Elasticity · Optimal Pricing · Competitive Intelligence · What-If Scenarios</div>
+      <div class="main-title">STRAIVE Dynamic Pricing</div>
+      <div class="hero-subtitle">
+        Enterprise-grade demand modeling, price elasticity analysis, and revenue simulation
+        built for data-driven pricing decisions across all service lines.
+      </div>
+      <div class="hero-pills">
+        <span class="hero-pill">⚡ Price Elasticity</span>
+        <span class="hero-pill">📈 Revenue Simulation</span>
+        <span class="hero-pill">🎯 Optimal Pricing</span>
+        <span class="hero-pill">🌍 Regional Intelligence</span>
+        <span class="hero-pill">⚔️ Competitive Positioning</span>
+        <span class="hero-pill">⚠️ Risk Analysis</span>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
     # ── Sidebar ───────────────────────────────────────────────────────────────
     with st.sidebar:
         st.markdown(f"""
-        <div style="padding:.6rem 0 .4rem 0;text-align:center;">
-          <div style="font-family:'Oswald';font-size:1.15rem;font-weight:700;
-                     color:{ACCENT};letter-spacing:3px;text-transform:uppercase;">💹 STRAIVE</div>
-          <div style="color:{MUTED};font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;
-                     margin-top:.15rem;">Pricing Intelligence Platform</div>
+        <div class="sidebar-logo-area">
+          <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                       background:linear-gradient(135deg,{ACCENT},{GREEN});
+                       display:flex;align-items:center;justify-content:center;
+                       font-size:1.1rem;flex-shrink:0;">💹</div>
+            <div>
+              <div class="sidebar-logo-name"><span>STRAIVE</span></div>
+              <div class="sidebar-logo-sub">Pricing Platform</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.8rem;">
+            <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);
+                       border-radius:6px;padding:.2rem .55rem;font-size:.6rem;
+                       color:{GREEN};font-weight:600;letter-spacing:1px;">● LIVE</div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid {BORDER};
+                       border-radius:6px;padding:.2rem .55rem;font-size:.6rem;
+                       color:{MUTED};font-weight:500;">v2.0</div>
+          </div>
         </div>
-        <hr style="border-color:{BORDER};margin:.5rem 0 .9rem 0;">
+        <div style="height:1px;background:{BORDER};margin:0;"></div>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-        <div style="color:{MUTED};font-size:.62rem;letter-spacing:2px;
-                   text-transform:uppercase;margin-bottom:.35rem;padding-left:.1rem;">
-          ⚙ Model Control
-        </div>
-        """, unsafe_allow_html=True)
-        train_btn    = st.button("▶ BUILD MODEL", type="primary")
+        st.markdown(f'<div class="sidebar-section-label">Model Control</div>', unsafe_allow_html=True)
+        train_btn    = st.button("▶  BUILD MODEL", type="primary")
         n_records    = st.slider("Transaction records", 1000, 8000, 3600, 200, key="n_rec")
         optimize_for = st.selectbox("Optimise for", ["revenue", "profit", "margin"], key="opt_obj")
 
         st.markdown(f"""
-        <hr style="border-color:{BORDER};margin:.9rem 0 .7rem 0;">
-        <div style="color:{MUTED};font-size:.62rem;letter-spacing:2px;
-                   text-transform:uppercase;margin-bottom:.5rem;padding-left:.1rem;">
-          📂 Analytics Module
-        </div>
+        <div style="height:1px;background:{BORDER};margin:1.2rem 0 0 0;"></div>
+        <div class="sidebar-section-label">Analytics Modules</div>
         """, unsafe_allow_html=True)
 
         NAV_OPTIONS = [
@@ -591,15 +879,26 @@ def main():
     # ── Gate on model build ───────────────────────────────────────────────────
     if not train_btn and "df" not in st.session_state:
         st.markdown(f"""
-        <div style="margin:4rem auto;max-width:560px;text-align:center;">
-          <div style="font-size:3.5rem;margin-bottom:1rem;">💹</div>
-          <div style="font-family:'Oswald';font-size:1.6rem;font-weight:600;
-                     color:{TEXT};letter-spacing:2px;text-transform:uppercase;margin-bottom:.8rem;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                   min-height:52vh;text-align:center;padding:3rem 1rem;">
+          <div style="width:80px;height:80px;border-radius:20px;
+                     background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(34,197,94,.1));
+                     border:1px solid rgba(59,130,246,.25);
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:2.4rem;margin-bottom:1.8rem;
+                     box-shadow:0 8px 40px rgba(59,130,246,.1);">💹</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:1.9rem;font-weight:800;
+                     color:{TEXT};letter-spacing:-1px;margin-bottom:.8rem;line-height:1.1;">
             Ready to Optimise
           </div>
-          <div style="color:{MUTED};font-size:.88rem;line-height:1.7;margin-bottom:1.5rem;">
-            Click <b style="color:{ACCENT};">BUILD MODEL</b> to generate transaction data,
-            fit demand models, and unlock all analytics modules.
+          <div style="color:{MUTED};font-size:.9rem;line-height:1.75;max-width:460px;margin-bottom:2rem;">
+            Click <strong style="color:{ACCENT};font-weight:700;">▶ BUILD MODEL</strong> in the sidebar to generate
+            transaction data, fit demand elasticity models, and unlock all 14 analytics modules.
+          </div>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem;max-width:500px;">
+            {"".join(f'<span style="background:rgba(255,255,255,.04);border:1px solid {BORDER};border-radius:8px;padding:.35rem .8rem;font-size:.68rem;color:{TEXT2};font-weight:500;">{m}</span>'
+              for m in ["Elasticity Modeling","Optimal Pricing","Revenue Simulation",
+                        "What-If Scenarios","Competitive Intel","Risk Analysis"])}
           </div>
         </div>
         """, unsafe_allow_html=True)
@@ -621,15 +920,6 @@ def main():
     win_mod  = st.session_state.get("win_model")
 
     # ── Top KPI bar ───────────────────────────────────────────────────────────
-    st.markdown(f"""
-    <div style="background:{CARD_BG};border:1px solid {BORDER};border-radius:12px;
-               padding:.45rem 1rem .2rem 1rem;margin:.2rem 0 .6rem 0;">
-      <span style="color:{MUTED};font-size:.62rem;letter-spacing:2px;text-transform:uppercase;">
-       Platform Summary
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-
     _mc = st.columns(8)
     total_rev    = df["revenue"].sum()
     total_profit = (df["revenue"] - df["cost"]).sum()
@@ -644,7 +934,7 @@ def main():
         ("Total Revenue",  f"${total_rev/1e6:.1f}M",    ACCENT),
         ("Gross Profit",   f"${total_profit/1e6:.1f}M", GREEN),
         ("Avg Margin",     f"{avg_margin:.1f}%",         ACCENT3),
-        ("Avg Price",      f"${avg_price:,.0f}",         ACCENT),
+        ("Avg Price",      f"${avg_price:,.0f}",         TEAL),
         ("Avg Discount",   f"{avg_disc:.1f}%",           YELLOW),
         ("Win Rate",       f"{win_rate:.1f}%",           GREEN),
         ("Products",       str(n_products),               PURPLE),
@@ -652,16 +942,13 @@ def main():
     ]
     for col, (lbl, val, clr) in zip(_mc, _kpis):
         col.markdown(f"""
-        <div class="kpi-card" style="border-top-color:{clr};">
-          <div class="kpi-val" style="color:{clr};">{val}</div>
+        <div class="kpi-card" style="--kpi-accent:{clr};">
+          <div class="kpi-val">{val}</div>
           <div class="kpi-lbl">{lbl}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div style="height:1px;background:linear-gradient(90deg,transparent,{ACCENT},transparent);
-               margin:.4rem 0 1.2rem 0;opacity:.4;"></div>
-    """, unsafe_allow_html=True)
+    st.markdown('<hr class="styled-divider">', unsafe_allow_html=True)
 
     # ═══════════════════════════════════════════════════════════════════════════
     # TAB 0 — Executive Dashboard
@@ -1421,34 +1708,38 @@ def main():
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
-    fc1, fc2, fc3 = st.columns([5,4,5])
-    with fc1:
-        st.markdown(f"""
-        <div style="padding:.8rem;">
-          <div style="font-family:'Oswald';font-size:.95rem;font-weight:700;color:{ACCENT};">
-           💹 STRAIVE · Dynamic Pricing Platform
-          </div>
-          <div style="color:{MUTED};font-size:.68rem;">
-           Demand Elasticity · Optimal Pricing · Competitive Intelligence
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-    with fc2:
-        st.markdown(f"""
-        <div style="padding:.8rem;text-align:center;border-left:1px solid {BORDER};border-right:1px solid {BORDER};">
-          <div style="color:{MUTED};font-size:.6rem;">Platform</div>
-          <div style="font-family:'Oswald';font-size:1.15rem;font-weight:700;color:{ACCENT3};">
-           STRAIVE Analytics
+    st.markdown(f"""
+    <div style="background:{CARD_BG};border:1px solid {BORDER};border-radius:16px;
+               padding:1.4rem 2rem;display:flex;align-items:center;justify-content:space-between;
+               flex-wrap:wrap;gap:1rem;margin-top:1rem;">
+      <div style="display:flex;align-items:center;gap:.9rem;">
+        <div style="width:34px;height:34px;border-radius:9px;flex-shrink:0;
+                   background:linear-gradient(135deg,{ACCENT},{GREEN});
+                   display:flex;align-items:center;justify-content:center;font-size:1rem;">💹</div>
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:.88rem;font-weight:700;
+                     color:{TEXT};letter-spacing:-0.3px;">STRAIVE Dynamic Pricing Platform</div>
+          <div style="color:{MUTED};font-size:.62rem;letter-spacing:1.5px;
+                     text-transform:uppercase;margin-top:.1rem;">
+            Demand Elasticity · Optimal Pricing · Competitive Intelligence
           </div>
         </div>
-        """, unsafe_allow_html=True)
-    with fc3:
-        st.markdown(f"""
-        <div style="padding:.8rem;text-align:right;">
-          <div style="color:{MUTED};font-size:.68rem;">Built: {CURRENT_DATE.strftime('%Y-%m-%d')}</div>
-          <div style="color:{ACCENT};font-size:.65rem;">straive_artifacts/pricing_params.json</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2rem;">
+        <div style="text-align:center;">
+          <div style="color:{MUTED};font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.2rem;">Platform</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:.82rem;font-weight:700;color:{ACCENT3};">STRAIVE Analytics</div>
         </div>
-        """, unsafe_allow_html=True)
+        <div style="width:1px;height:28px;background:{BORDER};"></div>
+        <div style="text-align:right;">
+          <div style="color:{MUTED};font-size:.62rem;">Built: {CURRENT_DATE.strftime('%Y-%m-%d')}</div>
+          <div style="color:{MUTED};font-size:.58rem;margin-top:.15rem;font-family:'JetBrains Mono',monospace;">
+            straive_artifacts/pricing_params.json
+          </div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
