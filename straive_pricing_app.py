@@ -2,6 +2,9 @@
 STRAIVE — Dynamic Pricing Optimization Platform
 Advanced Analytics: Demand Modeling + Price Elasticity + Revenue Simulation + What-If Engine
 Run: streamlit run straive_pricing_app.py
+
+NOTE: This app does NOT require matplotlib. All table styling uses pandas .bar()
+which is pure CSS and works on any Python/pandas version without extra dependencies.
 """
 from __future__ import annotations
 import io
@@ -28,6 +31,52 @@ from scipy.stats import norm, pearsonr
 from scipy.stats.qmc import Sobol
 
 warnings.filterwarnings("ignore")
+
+# ── Optional matplotlib guard ────────────────────────────────────────────────
+# pandas .background_gradient() requires matplotlib; we intentionally avoid it
+# so the app runs on environments where matplotlib is not installed.
+# All gradient-style table colouring uses pandas .bar() instead (pure CSS).
+try:
+    import matplotlib  # noqa: F401
+    _HAS_MATPLOTLIB = True
+except ImportError:
+    _HAS_MATPLOTLIB = False
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SAFE DATAFRAME STYLER  (no matplotlib required)
+# ─────────────────────────────────────────────────────────────────────────────
+def style_df(
+    df: pd.DataFrame,
+    bar_cols: Optional[List[str]] = None,
+    pos_color: str = "#36d97b",
+    neg_color: str = "#ff4d6d",
+    mid_align: bool = False,
+) -> "pd.io.formats.style.Styler":
+    """
+    Apply bar-chart column highlighting without requiring matplotlib.
+    Falls back gracefully if columns don't exist or are non-numeric.
+
+    Parameters
+    ----------
+    bar_cols   : numeric column names to render as inline bar charts
+    pos_color  : colour for high / positive values
+    neg_color  : colour for low / negative values (used when mid_align=True)
+    mid_align  : centre bars at zero — ideal for ± delta columns
+    """
+    styler = df.style
+    if bar_cols:
+        valid = [
+            c for c in bar_cols
+            if c in df.columns and pd.api.types.is_numeric_dtype(df[c])
+        ]
+        if valid:
+            if mid_align:
+                styler = styler.bar(subset=valid, align="mid",
+                                    color=[neg_color, pos_color])
+            else:
+                styler = styler.bar(subset=valid, color=pos_color, width=90)
+    return styler
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -689,12 +738,15 @@ def main():
 
             st.markdown('<div class="section-header">Elasticity Model Summary</div>', unsafe_allow_html=True)
             display_cols = ["Segment", "elasticity", "disc_lift", "r_squared", "mean_price", "mean_volume", "mean_margin", "n_obs"]
-            st.dataframe(e_df[display_cols].rename(columns={
+            renamed = e_df[display_cols].rename(columns={
                 "elasticity": "Price Elasticity", "disc_lift": "Discount Lift",
                 "r_squared": "R²", "mean_price": "Avg Price ($)", "mean_volume": "Avg Volume",
                 "mean_margin": "Avg Margin (%)", "n_obs": "Observations"
-            }).style.background_gradient(subset=["Price Elasticity"], cmap="RdYlGn_r"),
-                use_container_width=True, height=280)
+            })
+            st.dataframe(
+                style_df(renamed, bar_cols=["Price Elasticity"], pos_color=ACCENT, mid_align=True),
+                use_container_width=True, height=280,
+            )
             st.download_button("⬇ Download Elasticity CSV", to_csv_bytes(e_df), "elasticity.csv", "text/csv")
         else:
             st.warning("No elasticity data — rebuild model.")
@@ -930,8 +982,11 @@ def main():
                            yaxis_title="Quality Score")
         style_fig(fig2); st.plotly_chart(fig2, use_container_width=True)
 
-        st.dataframe(comp_df.style.background_gradient(subset=["Gap %"], cmap="RdYlGn_r"),
-                     use_container_width=True)
+        st.dataframe(
+            style_df(comp_df, bar_cols=["Gap %"], mid_align=True,
+                     pos_color=GREEN, neg_color=RED),
+            use_container_width=True,
+        )
 
     # ═══════════════════════════════════════════════════════════════════════════
     # TAB 6 — Regional Pricing
@@ -979,8 +1034,10 @@ def main():
         fig2.update_layout(title="Actual Revenue Split by Region", height=360)
         style_fig(fig2); st.plotly_chart(fig2, use_container_width=True)
 
-        st.dataframe(reg_df.style.background_gradient(subset=["Rec. Price ($)", "Demand Index"], cmap="YlOrRd"),
-                     use_container_width=True)
+        st.dataframe(
+            style_df(reg_df, bar_cols=["Rec. Price ($)", "Demand Index"], pos_color=ACCENT3),
+            use_container_width=True,
+        )
 
     # ═══════════════════════════════════════════════════════════════════════════
     # TAB 7 — Segment Intelligence
@@ -1034,8 +1091,10 @@ def main():
                            title="Segment Behavioural Profiles", height=500)
         style_fig(fig3); st.plotly_chart(fig3, use_container_width=True)
 
-        st.dataframe(seg_stats.style.background_gradient(subset=["Revenue","AvgMargin","WinRate"], cmap="RdYlGn"),
-                     use_container_width=True)
+        st.dataframe(
+            style_df(seg_stats, bar_cols=["Revenue", "AvgMargin", "WinRate"], pos_color=GREEN),
+            use_container_width=True,
+        )
 
     # ═══════════════════════════════════════════════════════════════════════════
     # TAB 8 — What-If Scenarios
@@ -1233,11 +1292,15 @@ def main():
                                showarrow=False, font=dict(size=8, color=TEXT), yshift=12)
         style_fig(fig); st.plotly_chart(fig, use_container_width=True)
 
-        st.dataframe(prod_pf[["product","Segment","Revenue","Margin","Volume","Rev_Share","Quadrant"]]
-                     .rename(columns={"product":"Product","Rev_Share":"Rev Share %"})
-                     .sort_values("Revenue", ascending=False)
-                     .style.background_gradient(subset=["Revenue","Margin","Rev Share %"], cmap="YlOrRd"),
-                     use_container_width=True, height=400)
+        pf_display = (
+            prod_pf[["product", "Segment", "Revenue", "Margin", "Volume", "Rev_Share", "Quadrant"]]
+            .rename(columns={"product": "Product", "Rev_Share": "Rev Share %"})
+            .sort_values("Revenue", ascending=False)
+        )
+        st.dataframe(
+            style_df(pf_display, bar_cols=["Revenue", "Margin", "Rev Share %"], pos_color=YELLOW),
+            use_container_width=True, height=400,
+        )
 
     # ═══════════════════════════════════════════════════════════════════════════
     # TAB 12 — Risk & Sensitivity
